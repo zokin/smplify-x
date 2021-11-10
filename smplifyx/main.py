@@ -22,6 +22,8 @@ from __future__ import division
 import sys
 import os
 
+os.environ['PYGLET_SHADOW_WINDOW']="0" # my code
+
 import os.path as osp
 
 import time

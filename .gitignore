@@ -107,3 +107,12 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+data
+.vscode
+team
+ubc1
+ubc2
+web
+wild
+outputs
+
