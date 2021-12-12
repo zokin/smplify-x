@@ -68,7 +68,7 @@ def main(**args):
     if not osp.exists(out_img_folder):
         os.makedirs(out_img_folder)
 
-    float_dtype = args['float_dtype']
+    float_dtype = args['float_dtype'] #TODO: check if float type makes a difference
     if float_dtype == 'float64':
         dtype = torch.float64
     elif float_dtype == 'float32':
@@ -131,6 +131,7 @@ def main(**args):
 
     if hasattr(camera, 'rotation'):
         camera.rotation.requires_grad = False
+    #NOTE: (weak persp) Camera should have modified params or not for fx, fy, cx, cy, R, t
 
     use_hands = args.get('use_hands', True)
     use_face = args.get('use_face', True)
@@ -171,6 +172,7 @@ def main(**args):
     shape_prior = create_prior(
         prior_type=args.get('shape_prior_type', 'l2'),
         dtype=dtype, **args)
+    #NOTE: check SMPLify for its shape prior
 
     angle_prior = create_prior(prior_type='angle', dtype=dtype)
 
@@ -196,15 +198,15 @@ def main(**args):
 
     # A weight for every joint of the model
     joint_weights = dataset_obj.get_joint_weights().to(device=device,
-                                                       dtype=dtype)
+                                                       dtype=dtype)    
     # Add a fake batch dimension for broadcasting
     joint_weights.unsqueeze_(dim=0)
-
+    #NOTE: ones of shape:torch.Size([1, 118]) with joints_to_ignore set to 0
     for idx, data in enumerate(dataset_obj):
 
         img = data['img']
         fn = data['fn']
-        keypoints = data['keypoints']
+        keypoints = data['keypoints'] # [B, 118, 3] in pixel coords [..., :2] and confidence in [..., 3]
         print('Processing: {}'.format(data['img_path']))
 
         curr_result_folder = osp.join(result_folder, fn)

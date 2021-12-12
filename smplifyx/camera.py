@@ -54,6 +54,7 @@ class PerspectiveCamera(nn.Module):
         # the camera matrix
         self.register_buffer('zero',
                              torch.zeros([batch_size], dtype=dtype))
+        #NOTE: probably not required
 
         if focal_length_x is None or type(focal_length_x) == float:
             focal_length_x = torch.full(
@@ -103,13 +104,13 @@ class PerspectiveCamera(nn.Module):
                                          self.translation.unsqueeze(dim=-1))
         homog_coord = torch.ones(list(points.shape)[:-1] + [1],
                                  dtype=points.dtype,
-                                 device=device)
+                                 device=device) #NOTE: [1, 118, 1]
         # Convert the points to homogeneous coordinates
-        points_h = torch.cat([points, homog_coord], dim=-1)
+        points_h = torch.cat([points, homog_coord], dim=-1) #NOTE: [1, 118, 4]
 
         projected_points = torch.einsum('bki,bji->bjk',
                                         [camera_transform, points_h])
-
+        #NOTE: [1, 118, 4]
         img_points = torch.div(projected_points[:, :, :2],
                                projected_points[:, :, 2].unsqueeze(dim=-1))
         img_points = torch.einsum('bki,bji->bjk', [camera_mat, img_points]) \

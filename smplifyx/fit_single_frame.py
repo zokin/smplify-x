@@ -108,10 +108,11 @@ def fit_single_frame(img,
     if degrees is None:
         degrees = [0, 90, 180, 270]
 
-    if data_weights is None:
+    if data_weights is None: #NOTE: ones 
         data_weights = [1, ] * 5
 
-    if body_pose_prior_weights is None:
+    if body_pose_prior_weights is None: #NOTE: [404.0, 404.0, 57.4, 4.78, 4.78]
+
         body_pose_prior_weights = [4.04 * 1e2, 4.04 * 1e2, 57.4, 4.78]
 
     msg = (
@@ -123,20 +124,20 @@ def fit_single_frame(img,
             len(body_pose_prior_weights)), msg
 
     if use_hands:
-        if hand_pose_prior_weights is None:
+        if hand_pose_prior_weights is None: #NOTE same as body ? ...
             hand_pose_prior_weights = [1e2, 5 * 1e1, 1e1, .5 * 1e1]
         msg = ('Number of Body pose prior weights does not match the' +
                ' number of hand pose prior weights')
         assert (len(hand_pose_prior_weights) ==
                 len(body_pose_prior_weights)), msg
-        if hand_joints_weights is None:
+        if hand_joints_weights is None: #NOTE: [0.0, 0.0, 0.0, 0.1, 2.0]
             hand_joints_weights = [0.0, 0.0, 0.0, 1.0]
             msg = ('Number of Body pose prior weights does not match the' +
                    ' number of hand joint distance weights')
             assert (len(hand_joints_weights) ==
                     len(body_pose_prior_weights)), msg
 
-    if shape_weights is None:
+    if shape_weights is None: #NOTE: [100, 50, 10, 5, 5]
         shape_weights = [1e2, 5 * 1e1, 1e1, .5 * 1e1]
     msg = ('Number of Body pose prior weights = {} does not match the' +
            ' number of Shape prior weights = {}')
@@ -157,7 +158,7 @@ def fit_single_frame(img,
         assert (len(jaw_pose_prior_weights) ==
                 len(body_pose_prior_weights)), msg
 
-        if expr_weights is None:
+        if expr_weights is None: #NOTE: [100, 50, 10, 5, 5]
             expr_weights = [1e2, 5 * 1e1, 1e1, .5 * 1e1]
         msg = ('Number of Body pose prior weights = {} does not match the' +
                ' number of Expression prior weights = {}')
@@ -166,14 +167,14 @@ def fit_single_frame(img,
                     len(body_pose_prior_weights),
                     len(expr_weights))
 
-        if face_joints_weights is None:
+        if face_joints_weights is None: #NOTE: [0.0, 0.0, 0.0, 0.0, 2.0]
             face_joints_weights = [0.0, 0.0, 0.0, 1.0]
         msg = ('Number of Body pose prior weights does not match the' +
                ' number of face joint distance weights')
         assert (len(face_joints_weights) ==
                 len(body_pose_prior_weights)), msg
 
-    if coll_loss_weights is None:
+    if coll_loss_weights is None: #NOTE: [0.0, 0.0, 0.0, 0.01, 1.0]
         coll_loss_weights = [0.0] * len(body_pose_prior_weights)
     msg = ('Number of Body pose prior weights does not match the' +
            ' number of collision loss weights')
@@ -186,7 +187,7 @@ def fit_single_frame(img,
         pose_embedding = torch.zeros([batch_size, 32],
                                      dtype=dtype, device=device,
                                      requires_grad=True)
-
+        #NOTE: [B, 32] 
         vposer_ckpt = osp.expandvars(vposer_ckpt)
         #vposer, _ = load_vposer(vposer_ckpt, vp_model='snapshot')        
         vposer, _ = load_model(
@@ -196,16 +197,16 @@ def fit_single_frame(img,
         vposer = vposer.to(device=device)
         vposer.eval()
 
-    if use_vposer:
+    if use_vposer: #NOTE: [B, 32]
         body_mean_pose = torch.zeros([batch_size, vposer_latent_dim],
                                      dtype=dtype)
     else:
         body_mean_pose = body_pose_prior.get_mean().detach().cpu()
 
     keypoint_data = torch.tensor(keypoints, dtype=dtype)
-    gt_joints = keypoint_data[:, :, :2]
+    gt_joints = keypoint_data[:, :, :2] #NOTE: [1, 118, 2]
     if use_joints_conf:
-        joints_conf = keypoint_data[:, :, 2].reshape(1, -1)
+        joints_conf = keypoint_data[:, :, 2].reshape(1, -1) #NOTE: [1, 118]
 
     # Transfer the data to the correct device
     gt_joints = gt_joints.to(device=device, dtype=dtype)
@@ -265,7 +266,7 @@ def fit_single_frame(img,
                    zip(*(opt_weights_dict[k] for k in keys
                          if opt_weights_dict[k] is not None))]
     for weight_list in opt_weights:
-        for key in weight_list:
+        for key in weight_list:#NOTE: NOT USED !!
             weight_list[key] = torch.tensor(weight_list[key],
                                             device=device,
                                             dtype=dtype)
@@ -279,7 +280,7 @@ def fit_single_frame(img,
                                 pose_embedding=pose_embedding,
                                 model_type=kwargs.get('model_type', 'smpl'),
                                 focal_length=focal_length, dtype=dtype)
-
+    #NOTE: init_t: [1, 3] /w requires_grad=False
     camera_loss = fitting.create_loss('camera_init',
                                       trans_estimation=init_t,
                                       init_joints_idxs=init_joints_idxs,
