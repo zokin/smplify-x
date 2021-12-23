@@ -114,6 +114,7 @@ def main(**args):
                         create_reye_pose=True,
                         create_transl=False,
                         dtype=dtype,
+                        num_betas=300,
                         **args)
 
     male_model = smplx.create(gender='male', **model_params)
